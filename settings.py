@@ -22,4 +22,4 @@ JWT_REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 # Static files directory settings
 STATIC_DIR = "static"
-TAMPLATES_DIR = "templates"
+TEMPLATES_DIR = "templates"
