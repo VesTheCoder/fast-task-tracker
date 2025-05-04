@@ -13,7 +13,7 @@ class User(Base):
     email = Column(String, index=True, unique=True)
     pasword_hash = Column(String)
     created_at = Column(DateTime(timezone=True), default=func.now())
-    tasks = relationship("Task", back_populates="users")
+    tasks = relationship("Task", back_populates="user")
 
 
 class Task(Base):

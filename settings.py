@@ -17,7 +17,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "69secret69")
 COOKIE_NAME = "fast-task-tracker-session"
 COOKIE_AGE = 60 * 60 * 24 * 30
 JWT_ALGORITHM = "HS256"
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES = os.environ.get(int("JWT_ACCESS_TOKEN_EXPIRE_MINUTES"), 30)
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 JWT_REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 # Static files directory settings

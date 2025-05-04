@@ -1,10 +1,16 @@
-from typing import Union
 from fastapi import FastAPI
+from database import engine, Base, get_db
 
-app = FastAPI()
 
+from routers import auth
+import settings
 
-@app.get("/")
-async def start_test():
-    return f"Test MSG BOIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII"
+import uvicorn
 
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="Fast Task Tracker", description="I'm Batman")
+app.include_router(router=auth.router, prefix=f"{settings.API_LINK}/auth",)
+
+if __name__ == "__main__":
+    uvicorn.run(app="main:app", host="127.0.0.1", port=8000, reload=settings.DEBUG)

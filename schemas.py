@@ -10,11 +10,15 @@ class BasicUser(BaseModel):
 class UserCreate(BasicUser):
     password: str
 
-    @field_validator
+    @field_validator("password")
     def pasword_strenght(cls, v: str):
         if len(v) < 9:
             raise ValueError("Pasword must be at least 9 characters")
         return v
+    
+class UserResponce(BasicUser):
+    id: int
+    created_at: datetime
     
 class UserLogin(BasicUser):
     pasword: str

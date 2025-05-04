@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, routing
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from schemas import UserCreate, UserLogin, Token
+from schemas import UserCreate, UserLogin, Token, UserResponce
 from models import User
 from database import get_db
 import settings
@@ -52,7 +52,7 @@ async def login_for_access_token(
     db: Session = Depends(get_db)
     ):
 
-    user = get_user(form_data.username, db)
+    user = get_user(db, form_data.username)
 
     if not user or not verify_password(form_data.password, user.pasword_hash):
         raise HTTPException(
@@ -75,7 +75,7 @@ async def login_for_access_token(
 
     return Token(access_token=access_token, token_type="bearer")
 
-@router.post("/register", response_model=UserCreate)
+@router.post("/register", response_model=UserResponce)
 async def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
     user_in_db = get_user(db, user_data.email)
     if user_in_db:
@@ -96,7 +96,7 @@ async def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 async def login_user(response: Response, user_data: UserLogin, db: Session = Depends(get_db)):
-    user = get_user(user_data.email, db)
+    user = get_user(db, user_data.email)
 
     if not user or not verify_password(user_data.pasword, user.pasword_hash):
         raise HTTPException(
@@ -107,7 +107,7 @@ async def login_user(response: Response, user_data: UserLogin, db: Session = Dep
     
     access_token_expires = timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.email}, expires_delta=access_token_expires
     )
     
     response.set_cookie(
