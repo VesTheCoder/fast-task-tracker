@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from schemas import UserCreate, UserLogin, Token, UserResponce
-from models import User
+from models import User, GuestSession
 from database import get_db
 import settings
 
@@ -43,7 +43,30 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     return encoded_jwt
 
+def create_guest_session(db: Session):
+    new_guest_session = GuestSession()
+    db.add(new_guest_session)
+    db.commit()
+    db.refresh(new_guest_session)
+    return new_guest_session
 
+def is_user_or_is_guest(request: Request, db: Session = Depends(get_db)):
+    user_header = request.headers.get("Authorisation")
+    if user_header.startswith("Bearer"):
+        user_token = user_header.replace("Bearer ", "")
+        payload = jwt.decode(user_token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        user_email = payload.get("sub")
+        user_id = db.query(User).filter(User.email == user_email).first()
+        if user_id:
+            return {"user_id": user_id, "is_guest": False}
+        
+    user_cookie = request.cookies.get(settings.COOKIE_NAME)
+    if not user_cookie:
+        new_guest_session = create_guest_session(db)
+        guest_id = new_guest_session.id
+
+    return {"guest_id": guest_id, "is_guest": True}
+        
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(

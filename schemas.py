@@ -31,11 +31,18 @@ class TaskBase(BaseModel):
     """
     title: Optional[str] = "never gonna give you up"
     description: Optional[str] = None
-    timer_lenght: Optional[str] = None
+    timer_lenght: Optional[int] = None
+
+class TaskCreate(TaskBase):
+    """
+    Schema to create a task
+    """
+    user_id: Optional[int]
+    guest_id: Optional[str]
 
 class TaskUpdate(TaskBase):
     """
-    Schema to update task
+    Schema to update a task
     """
     is_completed: Optional[str]
 
