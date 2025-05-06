@@ -37,8 +37,7 @@ class TaskCreate(TaskBase):
     """
     Schema to create a task
     """
-    user_id: Optional[int]
-    guest_id: Optional[str]
+    pass
 
 class TaskUpdate(TaskBase):
     """
@@ -54,11 +53,11 @@ class TaskResponce(TaskBase):
     is_completed: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
-    timer_status: bool
+    timer_active: bool
     timer_start: Optional[datetime] = None
     timer_stop: Optional[datetime] = None
-    user_id: Optional[int]
-    guest_id: Optional[str]
+    user_id: Optional[int] = None
+    guest_id: Optional[str] = None
 
 class TimerStart(BaseModel):
     task_id: int

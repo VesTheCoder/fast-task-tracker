@@ -43,29 +43,38 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     return encoded_jwt
 
-def create_guest_session(db: Session):
+def create_guest_session_and_set_cookie(db: Session, response: Response):
     new_guest_session = GuestSession()
     db.add(new_guest_session)
     db.commit()
     db.refresh(new_guest_session)
+
+    response.set_cookie(
+        key=settings.COOKIE_NAME, 
+        value=new_guest_session.id, 
+        max_age=settings.COOKIE_AGE,
+        secure=True,
+        httponly=True,
+        samesite="strict"
+        )
+
     return new_guest_session
 
 def is_user_or_is_guest(request: Request, db: Session = Depends(get_db)):
-    user_header = request.headers.get("Authorisation")
+    user_header = request.headers.get("Authorization")
     if user_header.startswith("Bearer"):
         user_token = user_header.replace("Bearer ", "")
         payload = jwt.decode(user_token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         user_email = payload.get("sub")
-        user_id = db.query(User).filter(User.email == user_email).first()
+        user_id = get_user(db, user_email).id
         if user_id:
-            return {"user_id": user_id, "is_guest": False}
+            return {"user_id": user_id, "is_guest": False, "needs_cookie": False}
         
     user_cookie = request.cookies.get(settings.COOKIE_NAME)
-    if not user_cookie:
-        new_guest_session = create_guest_session(db)
-        guest_id = new_guest_session.id
+    if user_cookie:
+        return {"guest_id": user_cookie, "is_guest": True, "needs_cookie": False}
 
-    return {"guest_id": guest_id, "is_guest": True}
+    return {"is_guest": True, "needs_cookie": True}
         
 
 @router.post("/token", response_model=Token)
@@ -144,7 +153,7 @@ async def login_user(response: Response, user_data: UserLogin, db: Session = Dep
     
     return Token(access_token=access_token, token_type="bearer")
 
-@router.post("/logout")
+@router.post("/my-account")
 async def logout_user(response: Response):
     response.delete_cookie(settings.COOKIE_NAME)
     return {"message": "logout successfull"}

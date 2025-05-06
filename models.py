@@ -29,7 +29,7 @@ class Task(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     timer_lenght = Column(Integer, nullable=True)
-    timer_status = Column(Boolean, default=False)
+    timer_active = Column(Boolean, default=False)
     timer_start = Column(DateTime(timezone=True), nullable=True)
     timer_stop = Column(DateTime(timezone=True), nullable=True)
 
