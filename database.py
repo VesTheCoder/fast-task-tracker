@@ -14,6 +14,8 @@ class Base(DeclarativeBase):
     pass
 
 LocalSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SchedulerSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 def get_db():
     db = LocalSession()
@@ -21,3 +23,4 @@ def get_db():
         yield db
     finally:
         db.close()
+

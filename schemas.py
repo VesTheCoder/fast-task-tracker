@@ -43,7 +43,10 @@ class TaskUpdate(TaskBase):
     """
     Schema to update a task
     """
-    is_completed: Optional[str]
+    title: Optional[str] = None
+    description: Optional[str] = None
+    is_completed: Optional[bool] = None
+    timer_lenght: Optional[int] = None
 
 class TaskResponce(TaskBase):
     """
@@ -60,12 +63,11 @@ class TaskResponce(TaskBase):
     guest_id: Optional[str] = None
 
 class TimerStart(BaseModel):
-    task_id: int
+    timer_active: bool
 
-class TimerEnd(BaseModel):
-    task_id: int
-    time_remaining: int
-    is_completed: bool
+class TimerStop(BaseModel):
+    timer_active: bool
+    
 
 
 
