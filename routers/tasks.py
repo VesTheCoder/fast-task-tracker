@@ -145,7 +145,6 @@ def timer_status_change(task_id: int):
         if task and task.timer_active:
             task.timer_active = False
             db_scheduler.commit()
-            db_scheduler.refresh(task)
     finally:
         db_scheduler.close()
 
