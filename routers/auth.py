@@ -62,18 +62,23 @@ def create_guest_session_and_set_cookie(db: Session, response: Response):
 
 def is_user_or_is_guest(request: Request, db: Session = Depends(get_db)):
     user_header = request.headers.get("Authorization")
-    if user_header.startswith("Bearer"):
-        user_token = user_header.replace("Bearer ", "")
-        payload = jwt.decode(user_token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        user_email = payload.get("sub")
-        user_id = get_user(db, user_email).id
-        if user_id:
-            return {"user_id": user_id, "is_guest": False, "needs_cookie": False}
-        
+    if user_header and user_header.startswith("Bearer"):
+        try:
+            user_token = user_header.replace("Bearer ", "")
+            payload = jwt.decode(user_token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            user_email = payload.get("sub")
+            user = get_user(db, user_email)
+            if user:
+                return {"user_id": user.id, "is_guest": False, "needs_cookie": False}
+        except (InvalidTokenError, AttributeError) as e:
+            print(f"Token validation error: {e}")
+    
     user_cookie = request.cookies.get(settings.COOKIE_NAME)
     if user_cookie:
-        return {"guest_id": user_cookie, "is_guest": True, "needs_cookie": False}
-
+        guest_session = db.query(GuestSession).filter(GuestSession.id == user_cookie).first()
+        if guest_session:
+            return {"guest_id": user_cookie, "is_guest": True, "needs_cookie": False}
+    
     return {"is_guest": True, "needs_cookie": True}
         
 

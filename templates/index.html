@@ -1,0 +1,77 @@
+{% extends "header.html" %}
+
+{% block title %}Fast Task Tracker - Your Productivity Partner{% endblock %}
+
+{% set active_page = 'home' %}
+
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <h1>Track Your Tasks <span class="highlight">Faster</span></h1>
+            <p class="tagline">Manage your time effectively with our intuitive task tracking solution</p>
+            <div class="cta-buttons">
+                <a href="/tasks" class="btn btn-primary">Get Started</a>
+                <a href="#features" class="btn btn-secondary">Learn More</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="static/imgs/duck.png" alt="Task Management Illustration">
+        </div>
+    </div>
+</section>
+
+<section id="features" class="features">
+    <div class="container">
+        <h2 class="section-title">Why Choose Fast Task Tracker?</h2>
+        <div class="feature-cards">
+            <div class="feature-card">
+                <i class="fas fa-clock feature-icon"></i>
+                <h3>Built-in Timer</h3>
+                <p>Set timers for your tasks and get notified when it's time to move on.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-cloud feature-icon"></i>
+                <p>Use without an account or sign up to save your data securely in the cloud.</p>
+                <h3>Works Offline</h3>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-bell feature-icon"></i>
+                <h3>Notifications</h3>
+                <p>Receive sound alerts when your task timers are complete.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="how-it-works">
+    <div class="container">
+        <h2 class="section-title">How It Works</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Create Tasks</h3>
+                <p>Add task names, descriptions, and set timers for tasks you want.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Start Working</h3>
+                <p>Begin your task and start the timer to stay focused.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Stay On Track</h3>
+                <p>Get notified when the time is up to move to the next task or repeat.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container">
+        <h2>Ready to boost your productivity?</h2>
+        <p>Start tracking your tasks and managing your time more effectively today.</p>
+        <a href="/tasks" class="btn btn-primary">Get Started Now</a>
+    </div>
+</section>
+{% endblock %}

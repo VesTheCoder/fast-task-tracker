@@ -83,6 +83,26 @@ def _catch_user_task(task_id: int, request: Request, db: Session):
 
 
 
+@router.get("/", response_model=list[TaskResponce])
+async def get_tasks(
+    request: Request,
+    db: Session = Depends(get_db)):
+    
+    current_user = is_user_or_is_guest(request, db)
+    print(f"GET tasks - Current user state: {current_user}")  # Debug log
+    
+    if current_user["is_guest"]:
+        if current_user["needs_cookie"]:
+            return []
+        else:
+            tasks = get_tasks_list(db, guest_id=current_user["guest_id"])
+            print(f"Retrieved {len(tasks)} tasks for guest ID: {current_user['guest_id']}")  # Debug log
+            return tasks
+    else:
+        tasks = get_tasks_list(db, user_id=current_user["user_id"])
+        print(f"Retrieved {len(tasks)} tasks for user ID: {current_user['user_id']}")  # Debug log
+        return tasks
+
 @router.post("/", response_model=TaskResponce)    
 async def add_task(
     task_data: TaskCreate, 
@@ -91,15 +111,26 @@ async def add_task(
     db: Session = Depends(get_db)):
 
     current_user = is_user_or_is_guest(request, db)
+    print(f"Current user state: {current_user}")  # Debug log
 
     if current_user["is_guest"]:
         if current_user["needs_cookie"]:
-            new_guest_session = create_guest_session_and_set_cookie(db, response)    
-            return create_task(db, task_data, guest_id = new_guest_session.id)
+            print("Creating new guest session and setting cookie")  # Debug log
+            new_guest_session = create_guest_session_and_set_cookie(db, response)
+            print(f"Created guest session with ID: {new_guest_session.id}")  # Debug log
+            result = create_task(db, task_data, guest_id=new_guest_session.id)
+            print(f"Created task with guest_id: {new_guest_session.id}")  # Debug log
+            return result
         else:
-            return create_task(db, task_data, guest_id = current_user["guest_id"])
-         
-    return create_task(db, task_data, user_id = current_user["user_id"])
+            guest_id = current_user["guest_id"]
+            print(f"Using existing guest session: {guest_id}")  # Debug log
+            result = create_task(db, task_data, guest_id=guest_id)
+            print(f"Created task with existing guest_id: {guest_id}")  # Debug log
+            return result
+    
+    user_id = current_user["user_id"]
+    print(f"Creating task for logged in user with ID: {user_id}")  # Debug log
+    return create_task(db, task_data, user_id=user_id)
 
 @router.delete("/", status_code=status.HTTP_200_OK)
 def delete_task(

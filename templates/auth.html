@@ -1,0 +1,72 @@
+{% extends "header.html" %}
+
+{% block title %}Account - Fast Task Tracker{% endblock %}
+
+{% set active_page = 'auth' %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="container">
+        <div class="auth-wrapper">
+            <div id="auth-status-message" class="auth-status-message"></div>
+            
+            <div id="auth-forms">
+                <!-- Login Form -->
+                <div class="auth-form-container" id="login-container">
+                    <h2>Login to Your Account</h2>
+                    <form id="login-form" class="auth-form">
+                        <div class="form-group">
+                            <label for="login-email">Email:</label>
+                            <input type="email" id="login-email" name="email" placeholder="Enter your email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password:</label>
+                            <input type="password" id="login-password" name="pasword" placeholder="Enter your password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </form>
+                    <p class="auth-switch">Don't have an account? <a href="#" id="switch-to-register">Register here</a></p>
+                </div>
+
+                <!-- Register Form -->
+                <div class="auth-form-container hidden" id="register-container">
+                    <h2>Create an Account</h2>
+                    <form id="register-form" class="auth-form">
+                        <div class="form-group">
+                            <label for="register-email">Email:</label>
+                            <input type="email" id="register-email" name="email" placeholder="Enter your email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password">Password:</label>
+                            <input type="password" id="register-password" name="password" placeholder="Create a password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-confirm-password">Confirm Password:</label>
+                            <input type="password" id="register-confirm-password" name="confirm_password" placeholder="Confirm your password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    </form>
+                    <p class="auth-switch">Already have an account? <a href="#" id="switch-to-login">Login here</a></p>
+                </div>
+            </div>
+
+            <!-- User Area (Hidden by default, shown after login) -->
+            <div id="user-area" class="user-area hidden">
+                <h2>Welcome, <span id="user-email"></span>!</h2>
+                <p>You are now logged in and your tasks will be saved to your account.</p>
+                <button id="logout-button" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // This will be populated with proper JavaScript in the main.js file
+    document.addEventListener('DOMContentLoaded', () => {
+        // Auth page initialization will be handled by main.js
+        console.log('Auth page loaded');
+    });
+</script>
+{% endblock %}

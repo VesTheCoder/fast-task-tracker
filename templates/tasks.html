@@ -1,0 +1,110 @@
+{% extends "header.html" %}
+
+{% block title %}Manage Your Tasks - Fast Task Tracker{% endblock %}
+
+{% set active_page = 'tasks' %}
+
+{% block head %}
+<audio id="timer-complete-sound" src="{{ url_for('static', path='timer-complete.mp3') }}" preload="auto"></audio>
+{% endblock %}
+
+{% block content %}
+<section class="tasks-section">
+    <div class="container">
+        <div class="tasks-header">
+            <h1>Your Tasks</h1>
+            <p id="user-status">You are currently working as a guest. <a href="/auth">Sign in</a> to save your tasks permanently.</p>
+        </div>
+
+        <div class="task-form-container">
+            <h2>Add New Task</h2>
+            <form id="task-form" class="task-form">
+                <div class="form-group">
+                    <label for="task-title">Task Title:</label>
+                    <input type="text" id="task-title" name="title" placeholder="Enter task title" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Description:</label>
+                    <textarea id="task-description" name="description" placeholder="Describe your task"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="task-timer">Timer (minutes):</label>
+                    <input type="number" id="task-timer" name="timer_lenght" placeholder="Set timer in minutes" min="1" value="1">
+                </div>
+                <button type="submit" class="btn btn-primary">Add Task</button>
+            </form>
+        </div>
+
+        <div class="tasks-list-container">
+            <h2>Tasks List</h2>
+            <div id="tasks-list" class="tasks-list">
+                <!-- Tasks will be populated here by JavaScript -->
+                <div class="empty-tasks-message">No tasks yet. Add your first task above!</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Task Item Template -->
+<template id="task-template">
+    <div class="task-item" data-task-id="">
+        <div class="task-header">
+            <h3 class="task-title"></h3>
+            <div class="task-actions">
+                <button class="btn-edit"><i class="fas fa-edit"></i></button>
+                <button class="btn-delete"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+        <p class="task-description"></p>
+        <div class="task-timer">
+            <div class="timer-display">
+                <span class="timer-value">Not started</span>
+            </div>
+            <div class="timer-controls">
+                <button class="btn-start-timer"><i class="fas fa-play"></i> Start</button>
+                <button class="btn-stop-timer"><i class="fas fa-stop"></i> Stop</button>
+            </div>
+        </div>
+        <div class="task-status">
+            <label>
+                <input type="checkbox" class="task-complete-checkbox">
+                Mark as Complete
+            </label>
+        </div>
+    </div>
+</template>
+
+<!-- Edit Task Modal -->
+<div id="edit-task-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Edit Task</h2>
+        <form id="edit-task-form">
+            <input type="hidden" id="edit-task-id">
+            <div class="form-group">
+                <label for="edit-task-title">Task Title:</label>
+                <input type="text" id="edit-task-title" name="title" required>
+            </div>
+            <div class="form-group">
+                <label for="edit-task-description">Description:</label>
+                <textarea id="edit-task-description" name="description"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="edit-task-timer">Timer (minutes):</label>
+                <input type="number" id="edit-task-timer" name="timer_lenght" min="1">
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // This will be populated with proper JavaScript in the main.js file
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialization will be handled by main.js
+        console.log('Tasks page loaded');
+    });
+</script>
+{% endblock %}
