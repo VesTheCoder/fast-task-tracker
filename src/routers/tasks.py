@@ -17,7 +17,9 @@ def create_task(
     task_info: TaskCreate, 
     guest_id: Optional[str] = None, 
     user_id: Optional[int] = None):
-
+    """
+    Creates a new task in the database for a user or guest.
+    """
     if not guest_id and not user_id:
         raise ValueError("Provide user_id or guest_id - at least one field is mandatory")
 
@@ -36,6 +38,9 @@ def create_task(
         
 
 def get_tasks_list(db: Session, user_id: Optional[int] = None, guest_id: Optional[str] = None):
+    """
+    Retrieves a list of tasks for a user or guest from the database.
+    """
     if guest_id:
         return db.query(Task).filter(Task.guest_id == guest_id).all()
     elif user_id:
@@ -48,7 +53,9 @@ def get_task_by_id(
     task_id, 
     user_id: Optional[int] = None, 
     guest_id: Optional[str] = None):
-    
+    """
+    Retrieves a specific task by ID for a user or guest from the database.
+    """
     current_task = db.query(Task).filter(Task.id == task_id)
 
     if guest_id:

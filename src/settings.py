@@ -10,10 +10,10 @@ APP_NAME = os.environ.get("APP_NAME", "Fast Task Tracker")
 API_LINK = "/api"
 
 # Database settings
-DATABASE = os.environ.get("DATABASE", "sqlite:///db.sqlite3")
+DATABASE = "sqlite:///db.sqlite3" if DEBUG else os.environ.get("DATABASE")
 
 # Security settings
-SECRET_KEY = os.environ.get("SECRET_KEY", "69secret69")
+SECRET_KEY = "69secret69" if DEBUG else os.environ.get("SECRET_KEY")
 COOKIE_NAME = "fast-task-tracker-session"
 COOKIE_AGE = 60 * 60 * 24 * 30
 JWT_ALGORITHM = "HS256"
@@ -21,5 +21,5 @@ JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("JWT_ACCESS_TOKEN_EXPIRE_MI
 JWT_REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 # Static files directory settings
-STATIC_DIR = "static"
-TEMPLATES_DIR = "templates"
+STATIC_DIR = "src/static"
+TEMPLATES_DIR = "src/templates"

@@ -31,9 +31,15 @@ def get_password_hash(password: str):
     return pwd_context.hash(password)
 
 def get_user(db: Session, email: str):
+    """
+    Retrieves a user from the database by email.
+    """
     return db.query(User).filter(User.email == email).first()
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    """
+    Creates a JWT access token with the provided data and expiration delta.
+    """
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now() + expires_delta
@@ -44,6 +50,9 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 def create_guest_session_and_set_cookie(db: Session, response: Response):
+    """
+    Creates a new guest session, adds it to the database, and sets the session cookie in the response.
+    """
     new_guest_session = GuestSession()
     db.add(new_guest_session)
     db.commit()
@@ -61,6 +70,9 @@ def create_guest_session_and_set_cookie(db: Session, response: Response):
     return new_guest_session
 
 def is_user_or_is_guest(request: Request, db: Session = Depends(get_db)):
+    """
+    Determines if the current request is from a logged-in user or a guest, based on JWT or guest session cookie.
+    """
     user_header = request.headers.get("Authorization")
     if user_header and user_header.startswith("Bearer"):
         try:
@@ -89,13 +101,17 @@ def is_user_or_is_guest(request: Request, db: Session = Depends(get_db)):
     return {"is_guest": True, "needs_cookie": True}
         
 
+
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-    ):
-
+    db: Session = Depends(get_db)):
+    """
+    Authenticates a user and creates an access token using OAuth2 password flow.
+    Verifies user credentials and sets a secure HTTP-only cookie with the JWT token.
+    Returns the access token in the response body.
+    """
     user = get_user(db, form_data.username)
 
     if not user or not verify_password(form_data.password, user.pasword_hash):
@@ -119,8 +135,15 @@ async def login_for_access_token(
 
     return Token(access_token=access_token, token_type="bearer")
 
+
+
 @router.post("/register", response_model=UserResponce)
 async def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
+    """
+    Creates a new user account in the database.
+    Checks for existing users with the same email to prevent duplicates.
+    Returns the created user information.
+    """
     user_in_db = get_user(db, user_data.email)
     if user_in_db:
         raise HTTPException(
@@ -138,8 +161,15 @@ async def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
 
     return user_in_db
 
+
+
 @router.post("/login")
 async def login_user(response: Response, user_data: UserLogin, db: Session = Depends(get_db)):
+    """
+    Authenticates a user with email and password.
+    Creates a JWT access token and sets it as a secure HTTP-only cookie.
+    Returns the access token in the response body.
+    """
     user = get_user(db, user_data.email)
 
     if not user or not verify_password(user_data.pasword, user.pasword_hash):
@@ -165,10 +195,18 @@ async def login_user(response: Response, user_data: UserLogin, db: Session = Dep
     
     return Token(access_token=access_token, token_type="bearer")
 
+
+
 @router.post("/my-account")
 async def logout_user(response: Response):
+    """
+    Logs out the current user by removing the authentication cookie.
+    Returns a success message upon successful logout.
+    """
     response.delete_cookie(settings.COOKIE_NAME)
     return {"message": "logout successfull"}
+
+
 
 @router.get("/status")
 async def auth_status(request: Request, db: Session = Depends(get_db)):
