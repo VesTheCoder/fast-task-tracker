@@ -27,7 +27,7 @@ App will be published on the live server on 29.05.2025. The link would appear he
 - **Backend**: Python, FastAPI, SQLAlchemy, APScheduler
 - **Frontend**: Jinja2, HTML5, CSS3, JavaScript
 - **Authentication**: JWT (PyJWT), Passlib (bcrypt)
-- **Database**: SQLite (default, easily swappable by adding new credentials in you server enviroment)
+- **Database**: SQLite (default, easily swappable to PostgreSQL by adding new credentials in you server enviroment)
 - **WebSockets**: Real-time timer updates
 - **Other**: Uvicorn (ASGI server), python-dotenv (config), Pydantic (validation)
 
@@ -58,7 +58,18 @@ App will be published on the live server on 29.05.2025. The link would appear he
 
 ---
 
-## 📦 Installation
+## 📦 Installation with Docker
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/fast-task-tracker.git
+   ```
+
+2. **Start the docker-compose.yml file**
+
+---
+
+## 📦 Installation manual
 
 1. **Clone the repository**
    ```bash
@@ -86,7 +97,7 @@ App will be published on the live server on 29.05.2025. The link would appear he
    ```
 
 5. **Open your browser**
-   - Visit [http://127.0.0.1:6969](http://127.0.0.1:6969)
+   - Visit [http://localhost:6969](http://localhost:6969)
 
 ---
 
@@ -95,26 +106,6 @@ App will be published on the live server on 29.05.2025. The link would appear he
 - **Home Page**: View and manage your tasks.
 - **Timers**: Start a timer for any task; get real-time updates and notifications when time is up.
 - **Authentication**: Register or log in for persistent task management, or use as a guest for quick, session-based tracking.
-
----
-
-## 📂 Project Structure
-
-```
-fast-task-tracker/
-│
-├── main.py              # FastAPI app entrypoint
-├── models.py            # SQLAlchemy ORM models
-├── schemas.py           # Pydantic schemas for validation
-├── database.py          # Database setup and session management
-├── settings.py          # Configuration and environment variables
-├── socket_manager.py    # WebSocket manager for real-time timers
-├── routers/             # API routers (auth, tasks)
-├── static/              # CSS, JS, images, audio
-├── templates/           # Jinja2 HTML templates
-├── requirements.txt     # Python dependencies
-└── README.md            # Project documentation
-```
 
 ---
 
