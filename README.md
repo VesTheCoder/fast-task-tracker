@@ -1,5 +1,6 @@
 # DISCLAMER
-App is still under development and is not functioning fully. Back-end is pretty much ready, while front-end still would be fixed and finalized (in about a week starting from 27.05.2025)
+The app is fully functional.
+App will be published on the live server on 29.05.2025. The link would appear here.
 
 # Fast Task Tracker
 
