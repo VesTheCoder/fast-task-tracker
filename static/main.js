@@ -16,6 +16,9 @@ const API_URL = '/api';
 const TASKS_API = `${API_URL}/tasks`;
 const AUTH_API = `${API_URL}/auth`;
 
+// Track active WebSocket connections per task
+const activeTimerSockets = {};
+
 // Home Page Initialization
 function initHomePage() {
     console.log('Home page initialized');
@@ -36,11 +39,11 @@ function initTasksPage() {
     const timerCompleteSound = document.getElementById('timer-complete-sound');
     const userStatusElement = document.getElementById('user-status');
 
-    // Check authentication status
+    // Check authentication status and update UI
     checkAuthStatus()
         .then(data => {
             if (!data.is_guest) {
-                userStatusElement.innerHTML = `Welcome back, <strong>${data.user_email}</strong>! Your tasks are saved to your account.`;
+                userStatusElement.innerHTML = `Welcome back! Your tasks are saved to your account.`;
             }
         })
         .catch(error => console.error('Auth check error:', error));
@@ -79,30 +82,40 @@ function initTasksPage() {
     }
 
     function renderTasks(tasks) {
+        // Get containers
+        const activeList = document.getElementById('tasks-list');
+        const completedList = document.getElementById('completed-tasks-list');
+
         // Clear existing tasks
-        while (tasksList.firstChild) {
-            if (tasksList.firstChild.classList && tasksList.firstChild.classList.contains('empty-tasks-message')) {
-                break;
-            }
-            tasksList.removeChild(tasksList.firstChild);
-        }
+        activeList.innerHTML = '';
+        completedList.innerHTML = '';
 
-        // Show empty message if no tasks
-        if (tasks.length === 0) {
+        // Separate tasks
+        const activeTasks = tasks.filter(task => !task.is_completed);
+        const completedTasks = tasks.filter(task => task.is_completed);
+
+        // Show empty message if no active tasks
+        if (activeTasks.length === 0) {
             showEmptyTasksMessage();
-            return;
         }
 
-        // Hide empty message if there are tasks
-        const emptyMessage = tasksList.querySelector('.empty-tasks-message');
-        if (emptyMessage) {
-            emptyMessage.style.display = 'none';
+        // Show empty message if no completed tasks
+        if (completedTasks.length === 0) {
+            const message = document.createElement('div');
+            message.className = 'empty-tasks-message';
+            message.textContent = 'No completed tasks yet!';
+            completedList.appendChild(message);
         }
 
-        // Render each task
-        tasks.forEach(task => {
+        // Render each active task
+        activeTasks.forEach(task => {
             const taskElement = createTaskElement(task);
-            tasksList.appendChild(taskElement);
+            activeList.appendChild(taskElement);
+        });
+        // Render each completed task
+        completedTasks.forEach(task => {
+            const taskElement = createTaskElement(task);
+            completedList.appendChild(taskElement);
         });
     }
 
@@ -117,9 +130,17 @@ function initTasksPage() {
         
         // Set timer text
         const timerDisplay = taskItem.querySelector('.timer-value');
-        if (task.timer_active) {
-            timerDisplay.textContent = formatSeconds(task.timer_lenght);
-            connectWebSocket(task.id, task.timer_lenght, timerDisplay);
+        if (task.timer_active && task.timer_stop) {
+            // Calculate remaining time from backend timer_stop
+            const stopTime = new Date(task.timer_stop).getTime();
+            const now = Date.now();
+            let remaining = Math.ceil((stopTime - now) / 1000);
+            if (remaining <= 0) {
+                timerDisplay.textContent = 'Timer Completed!';
+                timerDisplay.classList.add('timer-completed');
+            } else {
+                connectWebSocket(task.id, remaining, timerDisplay);
+            }
         } else {
             timerDisplay.textContent = task.timer_lenght ? formatSeconds(task.timer_lenght) : 'No timer';
         }
@@ -276,7 +297,6 @@ function initTasksPage() {
 
     async function startTimer(taskId) {
         try {
-            // Fix URL with trailing slash
             const response = await fetch(`${TASKS_API}/${taskId}/timer_start/`, {
                 method: 'PUT'
             });
@@ -293,17 +313,8 @@ function initTasksPage() {
             const taskElement = document.querySelector(`.task-item[data-task-id="${taskId}"]`);
             if (taskElement) {
                 const timerDisplay = taskElement.querySelector('.timer-value');
-                
-                // Make sure we have a valid timer length before displaying and connecting
-                if (task && task.timer_lenght && !isNaN(task.timer_lenght)) {
-                    timerDisplay.textContent = formatSeconds(task.timer_lenght);
-                    console.log('Starting timer WebSocket with duration:', task.timer_lenght);
-                    // Connect to WebSocket for real-time updates
-                    connectWebSocket(taskId, task.timer_lenght, timerDisplay);
-                } else {
-                    console.error('Invalid timer length from server:', task);
-                    timerDisplay.textContent = 'Timer error';
-                }
+                // Always connect WebSocket for real-time updates
+                connectWebSocket(taskId, task.timer_lenght, timerDisplay);
             }
         } catch (error) {
             console.error('Error starting timer:', error);
@@ -313,7 +324,6 @@ function initTasksPage() {
 
     async function stopTimer(taskId) {
         try {
-            // Fix URL with trailing slash
             const response = await fetch(`${TASKS_API}/${taskId}/timer_stop/`, {
                 method: 'PUT'
             });
@@ -321,6 +331,12 @@ function initTasksPage() {
             if (!response.ok) {
                 console.error('Failed to stop timer:', response.status, response.statusText);
                 throw new Error(`Failed to stop timer: ${response.status} ${response.statusText}`);
+            }
+            
+            // Close the WebSocket for this timer if it exists
+            if (activeTimerSockets[taskId]) {
+                activeTimerSockets[taskId].close();
+                delete activeTimerSockets[taskId];
             }
             
             const task = await response.json();
@@ -353,16 +369,8 @@ function initTasksPage() {
                 throw new Error(`Failed to update task completion: ${response.status} ${response.statusText}`);
             }
             
-            console.log(`Successfully updated task ${taskId} completion status`);
-            // Update task styling based on completion status
-            const taskElement = document.querySelector(`.task-item[data-task-id="${taskId}"]`);
-            if (taskElement) {
-                if (isCompleted) {
-                    taskElement.classList.add('completed');
-                } else {
-                    taskElement.classList.remove('completed');
-                }
-            }
+            // Re-fetch and re-render all tasks to update containers
+            loadTasks();
         } catch (error) {
             console.error('Error updating task completion:', error);
             alert('Failed to update task completion status. Please try again.');
@@ -370,6 +378,11 @@ function initTasksPage() {
     }
 
     function connectWebSocket(taskId, duration, timerDisplay) {
+        // Prevent multiple WebSockets for the same task
+        if (activeTimerSockets[taskId]) {
+            activeTimerSockets[taskId].close();
+            delete activeTimerSockets[taskId];
+        }
         // Ensure we have a valid duration
         if (!duration || isNaN(duration)) {
             console.error('Invalid timer duration:', duration);
@@ -378,15 +391,17 @@ function initTasksPage() {
         }
         
         console.log(`Creating WebSocket connection for timer with duration: ${duration} seconds`);
-        // Create WebSocket connection for this timer - ensure it's an integer
-        const ws = new WebSocket(`ws://${window.location.host}/ws/timer/${Math.floor(duration)}`);
+        // Use wss:// for HTTPS, ws:// for HTTP
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const ws = new WebSocket(`${wsProtocol}://${window.location.host}/ws/timer/${Math.floor(duration)}`);
+        activeTimerSockets[taskId] = ws;
         
         // Show connecting status
         timerDisplay.textContent = 'Connecting...';
         
         ws.onopen = () => {
             console.log('WebSocket connection established for timer');
-            timerDisplay.textContent = formatSeconds(duration); // Show initial time
+            // Do not set timerDisplay here; wait for backend message
         };
         
         ws.onmessage = (event) => {
@@ -398,14 +413,16 @@ function initTasksPage() {
                 console.log('Timer completed!');
                 timerDisplay.textContent = 'Completed!';
                 timerDisplay.classList.add('timer-completed');
-                
+                if (activeTimerSockets[taskId]) {
+                    activeTimerSockets[taskId].close();
+                    delete activeTimerSockets[taskId];
+                }
                 // Play sound notification
                 try {
                     timerCompleteSound.play().catch(e => console.error('Error playing sound:', e));
                 } catch (e) {
                     console.error('Error playing sound:', e);
                 }
-                
                 // Show browser notification if permitted
                 if (Notification.permission === 'granted') {
                     new Notification('Task Timer Completed!', {
@@ -432,9 +449,10 @@ function initTasksPage() {
         
         ws.onclose = (event) => {
             console.log('Timer WebSocket connection closed', event.code, event.reason);
-            if (event.code !== 1000) { // 1000 is normal closure
-                timerDisplay.textContent = 'Timer disconnected';
+            if (activeTimerSockets[taskId]) {
+                delete activeTimerSockets[taskId];
             }
+            
         };
         
         ws.onerror = (error) => {
@@ -485,15 +503,23 @@ function initAuthPage() {
     const authStatusMessage = document.getElementById('auth-status-message');
     const authForms = document.getElementById('auth-forms');
 
-    // Check if user is already logged in
+    // Check if user is already logged in and update UI
     checkAuthStatus()
         .then(data => {
             if (!data.is_guest) {
                 // User is logged in
                 showUserArea(data.user_email);
+            } else {
+                // User is not logged in
+                if (authForms) authForms.classList.remove('hidden');
+                if (userArea) userArea.classList.add('hidden');
             }
         })
-        .catch(error => console.error('Auth check error:', error));
+        .catch(error => {
+            console.error('Auth check error:', error);
+            if (authForms) authForms.classList.remove('hidden');
+            if (userArea) userArea.classList.add('hidden');
+        });
 
     // Event Listeners
     if (loginForm) loginForm.addEventListener('submit', handleLogin);
@@ -524,17 +550,28 @@ function initAuthPage() {
             const response = await fetch(`${AUTH_API}/login`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(loginData)
+                body: JSON.stringify(loginData),
+                credentials: 'include'
             });
             
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Login failed');
+                let errorMsg = 'Login failed. Please check your credentials.';
+                try {
+                    const errorData = await response.json();
+                    if (errorData && errorData.detail) errorMsg = errorData.detail;
+                } catch (e) {}
+                showStatusMessage(errorMsg, 'error');
+                return;
             }
             
-            const data = await response.json();
-            showUserArea(loginData.email);
-            showStatusMessage('Login successful! Welcome back.', 'success');
+            // After login, check status to get user email
+            const statusData = await checkAuthStatus();
+            if (!statusData.is_guest) {
+                showUserArea(statusData.user_email);
+                showStatusMessage('Login successful! Welcome back.', 'success');
+            } else {
+                showStatusMessage('Login failed. Please try again.', 'error');
+            }
         } catch (error) {
             console.error('Login error:', error);
             showStatusMessage(error.message || 'Login failed. Please check your credentials.', 'error');
@@ -566,8 +603,9 @@ function initAuthPage() {
             });
             
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Registration failed');
+                let errorMsg = 'Registration failed, your email was wrong format, or pasword was weak. Please correct the mistakes.';
+                showStatusMessage(errorMsg, 'error');
+                return;
             }
             
             const data = await response.json();
@@ -586,7 +624,8 @@ function initAuthPage() {
     async function handleLogout() {
         try {
             const response = await fetch(`${AUTH_API}/my-account`, {
-                method: 'POST'
+                method: 'POST',
+                credentials: 'include'
             });
             
             if (!response.ok) throw new Error('Logout failed');
@@ -595,6 +634,8 @@ function initAuthPage() {
             authForms.classList.remove('hidden');
             loginContainer.classList.remove('hidden');
             showStatusMessage('You have been logged out successfully.', 'success');
+            // After logout, reload the page to update UI and clear tasks
+            // window.location.reload();
         } catch (error) {
             console.error('Logout error:', error);
             showStatusMessage('Logout failed. Please try again.', 'error');
@@ -613,6 +654,7 @@ function initAuthPage() {
         authStatusMessage.textContent = message;
         authStatusMessage.className = 'auth-status-message';
         authStatusMessage.classList.add(type);
+        authStatusMessage.style.display = '';
         
         // Hide the message after 5 seconds
         setTimeout(() => {
@@ -625,53 +667,16 @@ function initAuthPage() {
 // Helper function to check authentication status
 async function checkAuthStatus() {
     try {
-        // This is a mock implementation since we don't have a real endpoint for this
-        // In a real app, we would have an endpoint to check user status
-        const token = getAuthToken();
-        
-        if (token) {
-            try {
-                // Try to parse the JWT to get user info
-                const payload = parseJwt(token);
-                if (payload && payload.sub) {
-                    return { is_guest: false, user_email: payload.sub };
-                }
-            } catch (e) {
-                console.error('Error parsing token:', e);
-            }
+        const response = await fetch(`${AUTH_API}/status`, {
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            return { is_guest: true };
         }
-        
-        return { is_guest: true };
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error checking auth status:', error);
         return { is_guest: true };
-    }
-}
-
-// Helper function to get auth token from cookies
-function getAuthToken() {
-    const cookies = document.cookie.split(';');
-    for (let cookie of cookies) {
-        const [name, value] = cookie.trim().split('=');
-        if (name === 'session_token') { // This should match the cookie name in settings.py
-            return value;
-        }
-    }
-    return null;
-}
-
-// Helper function to parse JWT token
-function parseJwt(token) {
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-
-        return JSON.parse(jsonPayload);
-    } catch (e) {
-        console.error('Error parsing JWT:', e);
-        return null;
     }
 }

@@ -61,12 +61,6 @@ class TaskResponce(TaskBase):
     timer_stop: Optional[datetime] = None
     user_id: Optional[int] = None
     guest_id: Optional[str] = None
-
-class TimerStart(BaseModel):
-    timer_active: bool
-
-class TimerStop(BaseModel):
-    timer_active: bool
     
 
 

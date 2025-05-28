@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Response, Depends, status, HTTPException
 from sqlalchemy.orm import Session
-from schemas import TaskCreate, TaskUpdate, TaskResponce, TimerStart, TimerStop
+from schemas import TaskCreate, TaskUpdate, TaskResponce
 from models import Task
 from datetime import datetime, timedelta
 from typing import Optional
@@ -157,7 +157,7 @@ def update_task(
         task.title = task_update.title
     if task_update.description:
         task.description = task_update.description
-    if task_update.is_completed:
+    if task_update.is_completed is not None:
         task.is_completed = task_update.is_completed
     if task_update.timer_lenght:
         task.timer_lenght = task_update.timer_lenght
@@ -181,7 +181,7 @@ def timer_status_change(task_id: int):
 
     return None
 
-@router.put("/{task_id}/timer_start", response_model=TimerStart)
+@router.put("/{task_id}/timer_start", response_model=TaskResponce)
 def start_timer(
     task_id: int,
     request: Request,
@@ -201,7 +201,7 @@ def start_timer(
 
     return task
 
-@router.put("/{task_id}/timer_stop", response_model=TimerStop)
+@router.put("/{task_id}/timer_stop", response_model=TaskResponce)
 def stop_timer(
     task_id: int,
     request: Request,

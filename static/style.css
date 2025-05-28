@@ -591,3 +591,38 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+
+.completed-tasks-list-container {
+    background-color: #f4f6fa;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 30px;
+    margin-top: 20px;
+}
+
+.completed-tasks-list-container h2 {
+    color: var(--secondary-color);
+    margin-bottom: 20px;
+}
+
+#completed-tasks-list.tasks-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+#completed-tasks-list .task-item {
+    background-color: #e2e6ea;
+    opacity: 0.7;
+}
+
+#completed-tasks-list .task-title {
+    text-decoration: line-through;
+    color: var(--secondary-color);
+}
+
+#completed-tasks-list .timer-completed {
+    color: var(--success-color);
+    font-weight: bold;
+}

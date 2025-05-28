@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, routing
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from schemas import UserCreate, UserLogin, Token, UserResponce
@@ -57,7 +57,7 @@ def create_guest_session_and_set_cookie(db: Session, response: Response):
         httponly=True,
         samesite="strict"
         )
-
+ 
     return new_guest_session
 
 def is_user_or_is_guest(request: Request, db: Session = Depends(get_db)):
@@ -75,9 +75,16 @@ def is_user_or_is_guest(request: Request, db: Session = Depends(get_db)):
     
     user_cookie = request.cookies.get(settings.COOKIE_NAME)
     if user_cookie:
-        guest_session = db.query(GuestSession).filter(GuestSession.id == user_cookie).first()
-        if guest_session:
-            return {"guest_id": user_cookie, "is_guest": True, "needs_cookie": False}
+        try:
+            payload = jwt.decode(user_cookie, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            user_email = payload.get("sub")
+            user = get_user(db, user_email)
+            if user:
+                return {"user_id": user.id, "is_guest": False, "needs_cookie": False}
+        except Exception:
+            guest_session = db.query(GuestSession).filter(GuestSession.id == user_cookie).first()
+            if guest_session:
+                return {"guest_id": user_cookie, "is_guest": True, "needs_cookie": False}
     
     return {"is_guest": True, "needs_cookie": True}
         
@@ -162,6 +169,37 @@ async def login_user(response: Response, user_data: UserLogin, db: Session = Dep
 async def logout_user(response: Response):
     response.delete_cookie(settings.COOKIE_NAME)
     return {"message": "logout successfull"}
+
+@router.get("/status")
+async def auth_status(request: Request, db: Session = Depends(get_db)):
+    """
+    Returns the current authentication status and user info if logged in.
+    """
+    user_header = request.headers.get("Authorization")
+    if user_header and user_header.startswith("Bearer"):
+        try:
+            user_token = user_header.replace("Bearer ", "")
+            payload = jwt.decode(user_token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            user_email = payload.get("sub")
+            user = get_user(db, user_email)
+            if user:
+                return {"is_guest": False, "user_email": user.email}
+        except (InvalidTokenError, AttributeError) as e:
+            raise f"auth_status problem: {e}"
+
+    user_cookie = request.cookies.get(settings.COOKIE_NAME)
+    if user_cookie:
+        try:
+            payload = jwt.decode(user_cookie, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+            user_email = payload.get("sub")
+            user = get_user(db, user_email)
+            if user:
+                return {"is_guest": False, "user_email": user.email}
+        except Exception:
+            guest_session = db.query(GuestSession).filter(GuestSession.id == user_cookie).first()
+            if guest_session:
+                return {"is_guest": True}
+    return {"is_guest": True}
 
 
 
