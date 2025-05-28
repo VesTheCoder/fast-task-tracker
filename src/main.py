@@ -21,7 +21,7 @@ def main():
     """
     Starts the FastAPI application using uvicorn on main.py file run.
     """
-    uvicorn.run(app="main:app", host="127.0.0.1", port=6969, reload=settings.DEBUG)
+    uvicorn.run(app="main:app", host="0.0.0.0", port=6969, reload=settings.DEBUG)
 
 if __name__ == "__main__":
     main()

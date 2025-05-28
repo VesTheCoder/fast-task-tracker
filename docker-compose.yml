@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  fast-task-tracker:
+    build: .
+    container_name: fast-task-tracker-app
+    ports:
+      - "6969:6969"
+    volumes:
+      - ./src:/app/src
+      - ./requirements.txt:/app/requirements.txt
+      - ./src/main.py:/app/main.py
+      - ./src/settings.py:/app/settings.py
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: ["python", "src/main.py"]
