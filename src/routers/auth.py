@@ -62,9 +62,9 @@ def create_guest_session_and_set_cookie(db: Session, response: Response):
         key=settings.COOKIE_NAME, 
         value=new_guest_session.id, 
         max_age=settings.COOKIE_AGE,
-        secure=True,
+        secure=settings.COOKIE_SECURE,
         httponly=True,
-        samesite="strict"
+        samesite="lax"
         )
  
     return new_guest_session
@@ -128,9 +128,9 @@ async def login_for_access_token(
         key=settings.COOKIE_NAME, 
         value=access_token, 
         max_age=settings.COOKIE_AGE,
-        secure=True,
+        secure=settings.COOKIE_SECURE,
         httponly=True,
-        samesite="strict"
+        samesite="lax"
         )
 
     return Token(access_token=access_token, token_type="bearer")
@@ -188,9 +188,9 @@ async def login_user(response: Response, user_data: UserLogin, db: Session = Dep
         key=settings.COOKIE_NAME, 
         value=access_token, 
         max_age=settings.COOKIE_AGE,
-        secure=True,
+        secure=settings.COOKIE_SECURE,
         httponly=True,
-        samesite="strict"
+        samesite="lax"
         )
     
     return Token(access_token=access_token, token_type="bearer")
