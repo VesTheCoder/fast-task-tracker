@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 # Debug mode settings (True on default)
@@ -21,8 +22,9 @@ JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("JWT_ACCESS_TOKEN_EXPIRE_MI
 JWT_REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 # Static files directory settings
-STATIC_DIR = "src/static"
-TEMPLATES_DIR = "src/templates"
+THIS_DIR = Path(__file__).resolve().parent
+STATIC_DIR = str(THIS_DIR) + "/static"
+TEMPLATES_DIR = str(THIS_DIR) + "/templates"
 
 # Uvicorn server creds
 HOST = "0.0.0.0"
