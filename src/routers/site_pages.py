@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from settings import TEMPLATES_DIR
 
 router = APIRouter(tags=["site_pages"])
-templates = Jinja2Templates(directory="src/templates")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request):

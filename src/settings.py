@@ -23,3 +23,7 @@ JWT_REFRESH_TOKEN_EXPIRE_DAYS = 30
 # Static files directory settings
 STATIC_DIR = "src/static"
 TEMPLATES_DIR = "src/templates"
+
+# Uvicorn server creds
+HOST = "0.0.0.0"
+PORT = 6969

@@ -10,7 +10,7 @@ import socket_manager
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Fast Task Tracker", description="I'm Batman")
-app.mount("/static", StaticFiles(directory="src/static"), name="static")
+app.mount("/static", StaticFiles(directory=settings.STATIC_DIR), name="static")
 app.include_router(router=auth.router, prefix=f"{settings.API_LINK}/auth")
 app.include_router(router=tasks.router, prefix=f"{settings.API_LINK}/tasks")
 app.include_router(router=site_pages.router)
@@ -21,7 +21,7 @@ def main():
     """
     Starts the FastAPI application using uvicorn on main.py file run.
     """
-    uvicorn.run(app="main:app", host="0.0.0.0", port=6969, reload=settings.DEBUG)
+    uvicorn.run(app="main:app", host=settings.HOST, port=settings.PORT, reload=settings.DEBUG)
 
 if __name__ == "__main__":
     main()
