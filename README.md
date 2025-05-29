@@ -1,6 +1,7 @@
 # DISCLAMER
 The app is fully functional.
-App will be published on the live server on 29.05.2025. The link would appear here.
+App is published here: vesprin.pythonanywhere.com
+It's free hosting, so it's kinda slow. You can easily install locally to check out everything on the fast pace. All info and instructions are below.
 
 # Fast Task Tracker
 
