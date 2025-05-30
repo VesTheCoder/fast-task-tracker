@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Response, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from schemas import TaskCreate, TaskUpdate, TaskResponce
 from models import Task
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Optional
 from database import get_db, SchedulerSession
 from routers.auth import is_user_or_is_guest, create_guest_session_and_set_cookie
@@ -196,7 +196,7 @@ def start_timer(
 
     task = _catch_user_task(task_id, request, db)
     
-    time_now = datetime.now(timezone.utc)
+    time_now = datetime.now()
     task.timer_start = time_now
     task.timer_stop = time_now + timedelta(seconds=task.timer_lenght)
     task.timer_active = True
