@@ -42,6 +42,6 @@ class GuestSession(Base):
     DB model that stores temporary sessions info for guest users
     """
     __tablename__ = "guest_sessions"
-    id = Column(String, primary_key=True, index=True, default=str(uuid.uuid4()))
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
