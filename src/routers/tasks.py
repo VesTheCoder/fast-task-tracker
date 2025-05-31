@@ -224,3 +224,14 @@ def stop_timer(
     db.refresh(task)
 
     return task
+
+
+@router.get("/server-time")
+def get_server_time():
+    """
+    A helper function to inform front-end about the current server time.
+    Helps to avoid timezone problems when working with task timers.
+    This function is a backup function for the use cases of the DB
+    that does not stores the timezone information in Datetime cells.
+    """
+    return {"server_time": datetime.now().isoformat() + "Z"}
