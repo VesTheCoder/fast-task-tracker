@@ -1,6 +1,6 @@
 # DISCLAMER
 The app is fully functional.
-App is published here: http://vesprin.pythonanywhere.com/
+App is published here: http://vesprin.pythonanywhere.com/.
 It's free hosting, so it's kinda slow and there is no HTTPS. If you are not comfortable with HTTP, you can easily install the project locally to check out everything on the fast pace. All info and instructions are below.
 
 # Fast Task Tracker
