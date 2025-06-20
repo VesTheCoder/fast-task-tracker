@@ -1,5 +1,6 @@
 # DISCLAMER
-- This project was made 95% manually, no autocomplete. What was written by LLM: front-end templates, docker files and this readme file.
+- This project was made 95% manually, no autocomplete.
+- What was written by LLM: front-end templates, docker files and this readme file. Everything was checked, corrected and tested.
 - The app is fully functional. App is published here:
 - http://vesprin.pythonanywhere.com/
 - It's free hosting, so it's kinda slow and there is no HTTPS. If you are not comfortable with HTTP, you can easily install the project locally to check out everything on the fast pace.
